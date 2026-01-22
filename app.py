@@ -1,35 +1,48 @@
 import streamlit as st
 import pandas as pd
-import pickle
 
-# Load the trained model
-with open("linear_regression_model.pkl", "rb") as f:
-    model = pickle.load(f)
+# -----------------------------
+# Load your dataset
+# -----------------------------
+DATA_PATH = "dataset.csv"  # make sure your CSV is in the same folder
+try:
+    data = pd.read_csv(DATA_PATH)
+except FileNotFoundError:
+    st.error(f"File '{DATA_PATH}' not found. Please upload your dataset.")
+    st.stop()
 
-st.title("Crop Yield Prediction App 🌾")
+st.title("Dynamic Streamlit Form for Dataset Columns")
 
-st.write("""
-This app predicts crop production based on input features like area, fertilizer, and other factors.
-""")
-
-# Load dataset to display (optional)
-if st.checkbox("Show dataset"):
-    data = pd.read_csv("yield.csv")
-    st.dataframe(data.head())
-
-st.header("Enter the values to predict crop production:")
-
-# Dynamically create inputs based on dataset columns (excluding target)
-data = pd.read_csv("yield.csv")
-input_cols = [col for col in data.columns if col.lower() != "production"]
-
+# -----------------------------
+# Create a dictionary to hold user inputs
+# -----------------------------
 user_input = {}
-for col in input_cols:
-    # If column is numeric
-    user_input[col] = st.number_input(f"{col}", value=float(data[col].mean()))
 
-# Predict button
-if st.button("Predict"):
-    input_df = pd.DataFrame([user_input])
-    prediction = model.predict(input_df)[0]
-    st.success(f"Predicted Crop Production: {prediction:.2f}")
+# -----------------------------
+# Loop through all columns in the dataset
+# -----------------------------
+for col in data.columns:
+    if pd.api.types.is_numeric_dtype(data[col]):
+        # Numeric columns → use mean as default
+        default_value = data[col].mean(skipna=True)
+        user_input[col] = st.number_input(f"{col}", value=float(default_value))
+    else:
+        # Non-numeric columns → use mode (most frequent value) as default
+        if not data[col].mode().empty:
+            default_value = str(data[col].mode()[0])
+        else:
+            default_value = ""
+        user_input[col] = st.text_input(f"{col}", value=default_value)
+
+# -----------------------------
+# Show user inputs
+# -----------------------------
+st.subheader("Your Input Values")
+st.json(user_input)
+
+# -----------------------------
+# Optional: You can convert user_input back to DataFrame
+# -----------------------------
+input_df = pd.DataFrame([user_input])
+st.subheader("Input as DataFrame")
+st.dataframe(input_df)
