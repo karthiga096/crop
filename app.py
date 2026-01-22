@@ -4,7 +4,7 @@ import pandas as pd
 # -----------------------------
 # Load your dataset
 # -----------------------------
-DATA_PATH = "dataset.csv"  # make sure your CSV is in the same folder
+DATA_PATH = "yield.csv"  # make sure your CSV is in the same folder
 try:
     data = pd.read_csv(DATA_PATH)
 except FileNotFoundError:
