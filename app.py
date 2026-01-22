@@ -1,74 +1,35 @@
 import streamlit as st
 import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
+import pickle
 
-# -----------------------------
-# Page Config
-# -----------------------------
-st.set_page_config(
-    page_title="Crop Yield Prediction",
-    page_icon="🌾",
-    layout="centered"
-)
+# Load the trained model
+with open("linear_regression_model.pkl", "rb") as f:
+    model = pickle.load(f)
 
-st.title("🌾 Crop Yield Prediction System")
-st.write("Predict crop production using Machine Learning (Linear Regression)")
+st.title("Crop Yield Prediction App 🌾")
 
-# -----------------------------
-# Load Dataset
-# -----------------------------
-@st.cache_data
-def load_data():
-    df = pd.read_csv("yield.csv")   # ✅ FIXED HERE
-    df = df.dropna()
+st.write("""
+This app predicts crop production based on input features like area, fertilizer, and other factors.
+""")
 
-    # Keep only numeric columns
-    df = df.select_dtypes(include=["number"])
+# Load dataset to display (optional)
+if st.checkbox("Show dataset"):
+    data = pd.read_csv("yield.csv")
+    st.dataframe(data.head())
 
-    return df
+st.header("Enter the values to predict crop production:")
 
-data = load_data()
-
-# -----------------------------
-# Prepare Data
-# -----------------------------
-y = data["Production"]
-X = data.drop("Production", axis=1)
-
-# Train model
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
-)
-
-model = LinearRegression()
-model.fit(X_train, y_train)
-
-# -----------------------------
-# User Input Section
-# -----------------------------
-st.subheader("🧾 Enter Crop Details")
+# Dynamically create inputs based on dataset columns (excluding target)
+data = pd.read_csv("yield.csv")
+input_cols = [col for col in data.columns if col.lower() != "production"]
 
 user_input = {}
+for col in input_cols:
+    # If column is numeric
+    user_input[col] = st.number_input(f"{col}", value=float(data[col].mean()))
 
-for col in X.columns:
-    user_input[col] = st.number_input(
-        f"{col}",
-        min_value=0.0,
-        value=float(X[col].mean())
-    )
-
-input_df = pd.DataFrame([user_input])
-
-# -----------------------------
-# Prediction
-# -----------------------------
-if st.button("🌱 Predict Crop Yield"):
+# Predict button
+if st.button("Predict"):
+    input_df = pd.DataFrame([user_input])
     prediction = model.predict(input_df)[0]
-    st.success(f"✅ Predicted Crop Production: **{prediction:.2f}**")
-
-# -----------------------------
-# Footer
-# -----------------------------
-st.markdown("---")
-st.caption("CropYieldML | Linear Regression Mini Project")
+    st.success(f"Predicted Crop Production: {prediction:.2f}")
