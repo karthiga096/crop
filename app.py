@@ -16,11 +16,11 @@ st.title("🌾 Crop Yield Prediction System")
 st.write("Predict crop production using Machine Learning (Linear Regression)")
 
 # -----------------------------
-# Load and Prepare Dataset
+# Load Dataset
 # -----------------------------
 @st.cache_data
 def load_data():
-    df = pd.read_csv("crop.csv")
+    df = pd.read_csv("yield.csv")   # ✅ FIXED HERE
     df = df.dropna()
 
     # Keep only numeric columns
@@ -30,7 +30,9 @@ def load_data():
 
 data = load_data()
 
-# Target and Features
+# -----------------------------
+# Prepare Data
+# -----------------------------
 y = data["Production"]
 X = data.drop("Production", axis=1)
 
@@ -69,5 +71,4 @@ if st.button("🌱 Predict Crop Yield"):
 # Footer
 # -----------------------------
 st.markdown("---")
-st.caption("Mini Project | CropYieldML using Linear Regression")
-
+st.caption("CropYieldML | Linear Regression Mini Project")
